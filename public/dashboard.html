@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizArena — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6f0;
+    --pink: #f7c5d5;
+    --pink-deep: #e8789a;
+    --pink-text: #8b3a5a;
+    --yellow: #fde99d;
+    --yellow-deep: #f5c842;
+    --yellow-text: #7a5c00;
+    --blue: #c2dff6;
+    --blue-deep: #6aaee8;
+    --blue-text: #1a4f7a;
+    --card: #fffbf8;
+    --border: rgba(0,0,0,0.07);
+    --text: #2c1f2e;
+    --muted: #9b8fa0;
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  .blob { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; filter: blur(70px); animation: drift 14s ease-in-out infinite; }
+  .blob-1 { width: 500px; height: 500px; background: var(--pink); opacity: 0.3; top: -200px; right: -100px; animation-delay: 0s; }
+  .blob-2 { width: 350px; height: 350px; background: var(--yellow); opacity: 0.35; bottom: -100px; left: 200px; animation-delay: -5s; }
+  .blob-3 { width: 280px; height: 280px; background: var(--blue); opacity: 0.3; top: 40%; left: 50%; animation-delay: -3s; }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(15px,-20px) scale(1.05); }
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--card);
+    border-right: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 28px 16px;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    animation: slideInSidebar 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes slideInSidebar {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; padding: 0 8px; }
+  .logo-icon {
+    width: 38px; height: 38px; background: var(--pink-deep);
+    border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-weight: 800; font-size: 18px; color: #fff;
+    box-shadow: 0 3px 14px rgba(232,120,154,0.35);
+  }
+  .logo-text { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; color: var(--pink-text); }
+
+  .nav-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 12px; margin-bottom: 8px; margin-top: 20px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 12px; border-radius: 12px;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 3px;
+  }
+  .nav-item:hover { background: var(--pink); color: var(--pink-text); }
+  .nav-item.active { background: var(--pink); color: var(--pink-text); font-weight: 600; }
+  .nav-item .icon { font-size: 15px; width: 20px; text-align: center; font-style: normal; }
+
+  .sidebar-footer { margin-top: auto; padding: 0 8px; }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; background: var(--pink); border-radius: 14px;
+  }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--pink-deep); display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px; color: #fff;
+    flex-shrink: 0;
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--pink-text); }
+  .user-role { font-size: 11px; color: var(--pink-text); opacity: 0.7; }
+  .logout-btn {
+    margin-left: auto; background: none; border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    color: var(--pink-text); opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .logout-btn:hover { opacity: 1; }
+
+  /* Main content */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1; padding: 36px 40px;
+    position: relative; z-index: 1;
+    animation: fadeInMain 0.8s ease both;
+    animation-delay: 0.2s;
+  }
+  @keyframes fadeInMain {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .topbar-greeting { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .topbar-sub { font-size: 14px; color: var(--muted); margin-top: 3px; }
+  .topbar-date {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 10px 16px;
+    font-size: 13px; color: var(--muted); font-weight: 500;
+  }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 22px 20px;
+    position: relative; overflow: hidden;
+    animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.07); }
+  .stat-card:nth-child(1) { animation-delay: 0.3s; }
+  .stat-card:nth-child(2) { animation-delay: 0.4s; }
+  .stat-card:nth-child(3) { animation-delay: 0.5s; }
+  .stat-card:nth-child(4) { animation-delay: 0.6s; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 100px; height: 100px; border-radius: 50%; opacity: 0.2;
+  }
+  .stat-card.pink::before { background: var(--pink-deep); }
+  .stat-card.yellow::before { background: var(--yellow-deep); }
+  .stat-card.blue::before { background: var(--blue-deep); }
+  .stat-card.green::before { background: #7ec87e; }
+
+  .stat-icon { font-size: 18px; font-weight: 700; color: var(--muted); margin-bottom: 12px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .stat-change { font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .stat-change.up { color: #5abf9a; }
+  .stat-change.neutral { color: var(--muted); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .three-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+
+  .section-card {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 24px;
+    animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    animation-delay: 0.5s;
+  }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text); }
+  .see-all {
+    font-size: 13px; color: var(--pink-deep); font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .see-all:hover { opacity: 0.7; }
+
+  .quiz-list { display: flex; flex-direction: column; gap: 12px; }
+  .quiz-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 14px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    cursor: pointer; transition: border-color 0.2s, transform 0.2s;
+    text-decoration: none; color: inherit;
+  }
+  .quiz-item:hover { border-color: var(--pink-deep); transform: translateX(3px); }
+  .quiz-thumb {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: var(--pink-text); flex-shrink: 0;
+  }
+  .quiz-thumb.pink { background: var(--pink); }
+  .quiz-thumb.yellow { background: var(--yellow); }
+  .quiz-thumb.blue { background: var(--blue); color: var(--blue-text); }
+  .quiz-info { flex: 1; }
+  .quiz-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .quiz-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .quiz-badge {
+    padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600;
+  }
+  .badge-Easy { background: #d4f0e8; color: #2d7a5f; }
+  .badge-Medium { background: var(--yellow); color: var(--yellow-text); }
+  .badge-Hard { background: #fdd5d5; color: #a03030; }
+
+  .leader-list { display: flex; flex-direction: column; gap: 10px; }
+  .leader-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 14px;
+    background: var(--bg); border: 1.5px solid var(--border);
+  }
+  .leader-rank {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .rank-1 { background: var(--yellow); color: var(--yellow-text); }
+  .rank-2 { background: #e0e0e0; color: #555; }
+  .rank-3 { background: #f5c4b3; color: #7a3a1a; }
+  .rank-other { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
+  .leader-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .leader-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .leader-pts { font-size: 13px; font-weight: 700; color: var(--pink-text); }
+
+  .attempt-list { display: flex; flex-direction: column; gap: 10px; }
+  .attempt-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 14px;
+    background: var(--bg); border: 1.5px solid var(--border);
+  }
+  .attempt-result {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .result-pass { background: #d4f0e8; color: #2d7a5f; }
+  .result-fail { background: #fdd5d5; color: #a03030; }
+  .attempt-info { flex: 1; }
+  .attempt-name { font-size: 13px; font-weight: 600; }
+  .attempt-date { font-size: 12px; color: var(--muted); }
+  .attempt-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+  }
+  .score-pass { color: #5abf9a; }
+  .score-fail { color: #e05c7a; }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .main { padding: 24px 20px; }
+  }
+  @media (max-width: 650px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">Q</div>
+    <span class="logo-text">QuizArena</span>
+  </div>
+
+  <span class="nav-label">Menu</span>
+  <a class="nav-item active" href="dashboard.html">
+    <span class="icon">&#8962;</span> Dashboard
+  </a>
+  <a class="nav-item" href="quizzes.html">
+    <span class="icon">&#9776;</span> Browse Quizzes
+  </a>
+  <a class="nav-item" href="attempts.html">
+    <span class="icon">&#9998;</span> My Attempts
+  </a>
+  <a class="nav-item" href="leaderboard.html">
+    <span class="icon">&#9733;</span> Leaderboard
+  </a>
+
+  <!-- Shown only for admin -->
+  <span class="nav-label" id="adminNavLabel" style="display:none">Admin</span>
+  <a class="nav-item" id="adminNav" href="admin.html" style="display:none">
+    <span class="icon">&#9881;</span> Manage Quizzes
+  </a>
+
+  <!-- Shown only for teacher -->
+  <span class="nav-label" id="teacherNavLabel" style="display:none">Teacher</span>
+  <a class="nav-item" id="teacherNav" href="teacher-dashboard.html" style="display:none">
+    <span class="icon">&#9998;</span> My Dashboard
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <div class="user-role" id="sidebarRole">student</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Exit</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-greeting" id="greeting">Good morning</div>
+      <div class="topbar-sub" id="greetingSub">Here's what's happening today</div>
+    </div>
+    <div class="topbar-date" id="topDate"></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card pink">
+      <div class="stat-icon">Pts</div>
+      <div class="stat-value" id="totalPoints">—</div>
+      <div class="stat-label">Total Points</div>
+      <div class="stat-change up" id="pointsChange">Keep going!</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-icon">Quiz</div>
+      <div class="stat-value" id="quizzesAttempted">—</div>
+      <div class="stat-label">Quizzes Taken</div>
+      <div class="stat-change neutral">All time</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">Avg</div>
+      <div class="stat-value" id="avgScore">—</div>
+      <div class="stat-label">Avg Score</div>
+      <div class="stat-change up" id="avgLabel">—</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">Bdg</div>
+      <div class="stat-value" id="badgeCount">—</div>
+      <div class="stat-label">Badges Earned</div>
+      <div class="stat-change neutral">Collect them all</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px;">
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Available Quizzes</span>
+        <a class="see-all" href="quizzes.html">See all</a>
+      </div>
+      <div class="quiz-list" id="quizList">
+        <div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Loading quizzes...</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Top Students</span>
+        <a class="see-all" href="leaderboard.html">Full board</a>
+      </div>
+      <div class="leader-list" id="leaderList">
+        <div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Recent Attempts</span>
+      </div>
+      <div class="attempt-list" id="attemptList">
+        <div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No attempts yet</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Your Badges</span>
+      </div>
+      <div id="badgeGrid" style="display:flex;flex-wrap:wrap;gap:10px;min-height:60px;">
+        <div style="color:var(--muted);font-size:14px;">Loading...</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:5000/api';
+  const token = localStorage.getItem('token');
+
+  if (!token) window.location.href = 'auth.html';
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.href = 'auth.html';
+  }
+
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function formatDate() {
+    return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  }
+
+  function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+  }
+
+  const avatarColors = ['#e8789a','#6aaee8','#f5c842','#7ec87e','#b888e0'];
+  function avatarColor(name) {
+    if (!name) return avatarColors[0];
+    return avatarColors[name.charCodeAt(0) % avatarColors.length];
+  }
+
+  const thumbColors = ['pink','yellow','blue'];
+
+  async function loadMe() {
+    try {
+      const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+      if (!res.ok) { logout(); return; }
+      const data = await res.json();
+      const user = data.user || data.data || data;
+
+      // FIX: redirect teachers to their own dashboard
+      if (user.role === 'teacher') {
+        window.location.href = 'teacher-dashboard.html';
+        return;
+      }
+
+      document.getElementById('sidebarName').textContent = user.name || 'Student';
+      document.getElementById('sidebarRole').textContent = user.role || 'student';
+      document.getElementById('sidebarAvatar').textContent = getInitials(user.name);
+      document.getElementById('sidebarAvatar').style.background = avatarColor(user.name);
+      document.getElementById('greeting').textContent = `${getGreeting()}, ${(user.name||'').split(' ')[0]}`;
+
+      // Show admin nav if admin
+      if (user.role === 'admin') {
+        document.getElementById('adminNav').style.display = 'flex';
+        document.getElementById('adminNavLabel').style.display = 'block';
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API}/leaderboard/profile/me`, { headers: authHeaders() });
+      const data = await res.json();
+      // FIX: leaderboard/profile/me returns { success, profile }
+      const p = data.profile || data.data || data;
+      document.getElementById('totalPoints').textContent = (p.totalPoints ?? 0).toLocaleString();
+      document.getElementById('quizzesAttempted').textContent = p.quizzesAttempted ?? 0;
+      const avg = p.averageScore ?? 0;
+      document.getElementById('avgScore').textContent = avg.toFixed(0) + '%';
+      document.getElementById('avgLabel').textContent = avg >= 70 ? 'Great work!' : avg >= 50 ? 'Keep pushing!' : 'Room to grow';
+
+      const badges = p.badges || [];
+      document.getElementById('badgeCount').textContent = badges.length;
+      const badgeGrid = document.getElementById('badgeGrid');
+      if (badges.length === 0) {
+        badgeGrid.innerHTML = '<div style="color:var(--muted);font-size:13px;">Complete quizzes to earn badges!</div>';
+      } else {
+        badgeGrid.innerHTML = badges.map(b => `
+          <div style="background:var(--yellow);color:var(--yellow-text);padding:8px 14px;border-radius:100px;font-size:13px;font-weight:600;">
+            ${b}
+          </div>`).join('');
+      }
+    } catch(e) {
+      document.getElementById('totalPoints').textContent = '0';
+      document.getElementById('quizzesAttempted').textContent = '0';
+      document.getElementById('avgScore').textContent = '0%';
+      document.getElementById('badgeCount').textContent = '0';
+      document.getElementById('badgeGrid').innerHTML = '<div style="color:var(--muted);font-size:13px;">Complete quizzes to earn badges!</div>';
+    }
+  }
+
+  async function loadQuizzes() {
+    try {
+      const res = await fetch(`${API}/quizzes`, { headers: authHeaders() });
+      const data = await res.json();
+      const quizzes = (data.quizzes || data.data || data).slice(0, 4);
+      const el = document.getElementById('quizList');
+      if (!quizzes.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No quizzes yet</div>'; return; }
+      el.innerHTML = quizzes.map((q, i) => {
+        const letter = (q.title || 'Q')[0].toUpperCase();
+        return `
+        <a class="quiz-item" href="quiz.html?id=${q._id}">
+          <div class="quiz-thumb ${thumbColors[i % 3]}">${letter}</div>
+          <div class="quiz-info">
+            <div class="quiz-name">${q.title}</div>
+            <div class="quiz-meta">${q.questions?.length || 0} questions · ${q.timeLimitMinutes || 10} mins</div>
+          </div>
+          <span class="quiz-badge badge-${q.difficulty || 'Medium'}">${q.difficulty || 'Medium'}</span>
+        </a>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('quizList').innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Could not load quizzes</div>';
+    }
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const res = await fetch(`${API}/leaderboard/global/top`, { headers: authHeaders() });
+      const data = await res.json();
+      // FIX: leaderboard route returns { leaderboard: [] } not { data: [] }
+      const leaders = (data.leaderboard || data.data || (Array.isArray(data) ? data : [])).slice(0, 5);
+      const el = document.getElementById('leaderList');
+      if (!leaders.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No data yet</div>'; return; }
+      el.innerHTML = leaders.map((l, i) => {
+        const name = l.userId?.name || l.name || 'Unknown';
+        const pts = l.totalPoints ?? l.points ?? 0;
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+        return `
+          <div class="leader-item">
+            <div class="leader-rank ${rankClass}">${i+1}</div>
+            <div class="leader-avatar" style="background:${avatarColor(name)}">${getInitials(name)}</div>
+            <div class="leader-name">${name}</div>
+            <div class="leader-pts">${pts.toLocaleString()} pts</div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('leaderList').innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Could not load</div>';
+    }
+  }
+
+  async function loadAttempts() {
+    try {
+      const res = await fetch(`${API}/attempts/my`, { headers: authHeaders() });
+      const data = await res.json();
+      // FIX: attempts/my returns { success, count, attempts }
+      const attempts = (data.attempts || data.data || (Array.isArray(data) ? data : [])).slice(0, 4);
+      const el = document.getElementById('attemptList');
+      if (!attempts.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No attempts yet — take a quiz!</div>'; return; }
+      el.innerHTML = attempts.map(a => {
+        const title = a.quizId?.title || 'Quiz';
+        // FIX: model uses percentageScore not score
+        const score = a.percentageScore ?? a.score ?? 0;
+        const passed = a.passed;
+        const date = new Date(a.submittedAt || a.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+        return `
+          <div class="attempt-item">
+            <div class="attempt-result ${passed ? 'result-pass' : 'result-fail'}">${passed ? 'P' : 'F'}</div>
+            <div class="attempt-info">
+              <div class="attempt-name">${title}</div>
+              <div class="attempt-date">${date}</div>
+            </div>
+            <div class="attempt-score ${passed ? 'score-pass' : 'score-fail'}">${score.toFixed(0)}%</div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('attemptList').innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No attempts yet</div>';
+    }
+  }
+
+  // Init
+  document.getElementById('greeting').textContent = getGreeting();
+  document.getElementById('topDate').textContent = formatDate();
+
+  loadMe();
+  loadProfile();
+  loadQuizzes();
+  loadLeaderboard();
+  loadAttempts();
+</script>
+</body>
+</html>

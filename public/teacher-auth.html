@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizArena — Teacher Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f0f4fd; --teal: #4ecdc4; --teal-deep: #2ab5ac; --teal-text: #0d5e59;
+    --blue: #6aaee8; --blue-deep: #3a87d5; --blue-light: #c2dff6;
+    --card: #ffffff; --border: rgba(0,0,0,0.08); --text: #1a2a3a; --muted: #7a8fa0;
+    --error: #e05c5c; --success: #4ecdc4;
+  }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+  .bg-shapes { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .shape { position: absolute; border-radius: 50%; filter: blur(80px); animation: drift 16s ease-in-out infinite; }
+  .s1 { width: 500px; height: 500px; background: #4ecdc4; opacity: 0.15; top: -200px; left: -100px; }
+  .s2 { width: 400px; height: 400px; background: #6aaee8; opacity: 0.15; bottom: -150px; right: -50px; animation-delay: -6s; }
+  .s3 { width: 300px; height: 300px; background: #fde99d; opacity: 0.2; top: 40%; left: 55%; animation-delay: -3s; }
+  @keyframes drift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(15px,-20px); } }
+
+  .auth-container { position: relative; z-index: 1; width: 100%; max-width: 440px; padding: 24px; animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  .auth-card { background: var(--card); border-radius: 26px; padding: 40px; border: 1.5px solid var(--border); box-shadow: 0 20px 60px rgba(78,205,196,0.1), 0 4px 20px rgba(0,0,0,0.06); }
+
+  .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; justify-content: center; }
+  .logo-icon { width: 46px; height: 46px; background: linear-gradient(135deg, var(--teal), var(--blue-deep)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 20px; color: #fff; box-shadow: 0 4px 16px rgba(78,205,196,0.4); }
+  .logo-text { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 22px; color: var(--text); }
+  .logo-badge { background: var(--teal); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-left: 4px; letter-spacing: 0.5px; }
+
+  .auth-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  /* Tab switcher */
+  .tab-row { display: flex; background: var(--bg); border-radius: 14px; padding: 4px; margin-bottom: 28px; }
+  .tab-btn { flex: 1; padding: 10px; border: none; background: none; border-radius: 11px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.25s; }
+  .tab-btn.active { background: var(--card); color: var(--teal-text); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%; background: #f7fafc; border: 1.5px solid #e2eaf2; border-radius: 13px;
+    padding: 13px 15px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(78,205,196,0.15); }
+  input::placeholder { color: #c0ccd8; }
+
+  .btn-auth { width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--teal), var(--blue-deep)); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 18px rgba(78,205,196,0.35); margin-top: 8px; }
+  .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(78,205,196,0.45); }
+  .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .divider { text-align: center; font-size: 13px; color: var(--muted); margin: 20px 0; }
+  .student-link { display: block; text-align: center; font-size: 13px; color: var(--blue-deep); text-decoration: none; font-weight: 500; margin-top: 16px; }
+  .student-link:hover { text-decoration: underline; }
+
+  .error-msg { background: #fde8e8; border: 1px solid #f5c6c6; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 16px; display: none; }
+  .error-msg.show { display: block; animation: shake 0.4s ease; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="bg-shapes">
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+</div>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="logo-row">
+      <div class="logo-icon">Q</div>
+      <span class="logo-text">QuizArena <span class="logo-badge">TEACHER</span></span>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <div id="errorMsg" class="error-msg"></div>
+
+    <!-- Login Form -->
+    <div id="loginForm">
+      <div class="auth-title">Welcome back 👋</div>
+      <div class="auth-sub">Sign in to your teacher account</div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="teacher@school.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-auth" id="loginBtn" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" style="display:none">
+      <div class="auth-title">Join as Teacher 🎓</div>
+      <div class="auth-sub">Create your teacher account</div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Mr. / Ms. Your Name"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="teacher@school.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Min. 6 characters" onkeydown="if(event.key==='Enter')doRegister()"/>
+      </div>
+      <button class="btn-auth" id="registerBtn" onclick="doRegister()">Create Account</button>
+      <div style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center">
+        ⚠️ New teacher accounts need admin approval before access is granted.
+      </div>
+    </div>
+
+    <div class="divider">— or —</div>
+    <a href="auth.html" class="student-link">👨‍🎓 Student login instead</a>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api';
+
+  // If already logged in as teacher, redirect
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  if (token && role === 'teacher') window.location.href = 'teacher-dashboard.html';
+
+  function switchTab(tab) {
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+    hideError();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function hideError() { document.getElementById('errorMsg').classList.remove('show'); }
+
+  function setLoading(btnId, loading, text) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? `<span class="spinner"></span>${text}` : text;
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showError('Please fill in all fields'); return; }
+    hideError();
+    setLoading('loginBtn', true, 'Signing in...');
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError(data.message || 'Invalid credentials'); return; }
+      const user = data.user || data.data;
+      const userRole = user?.role || data.role;
+      // Allow teacher or admin roles
+      if (userRole !== 'teacher' && userRole !== 'admin') {
+        showError('This portal is for teachers only. Please use the student login.');
+        return;
+      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', userRole);
+      window.location.href = 'teacher-dashboard.html';
+    } catch(e) { showError('Cannot reach server. Is it running?'); }
+    setLoading('loginBtn', false, 'Sign In');
+  }
+
+  async function doRegister() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    if (!name || !email || !password) { showError('Please fill in all fields'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
+    hideError();
+    setLoading('registerBtn', true, 'Creating account...');
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Register as teacher role
+        body: JSON.stringify({ name, email, password, role: 'teacher' })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError(data.message || 'Registration failed'); return; }
+      showError('');
+      // Show success and switch to login
+      document.getElementById('errorMsg').style.background = '#e8f5e9';
+      document.getElementById('errorMsg').style.borderColor = '#a5d6a7';
+      document.getElementById('errorMsg').style.color = '#2e7d32';
+      document.getElementById('errorMsg').textContent = '✅ Account created! An admin will approve your access. You can then sign in.';
+      document.getElementById('errorMsg').classList.add('show');
+      setTimeout(() => switchTab('login'), 2500);
+    } catch(e) { showError('Cannot reach server. Is it running?'); }
+    setLoading('registerBtn', false, 'Create Account');
+  }
+</script>
+</body>
+</html>

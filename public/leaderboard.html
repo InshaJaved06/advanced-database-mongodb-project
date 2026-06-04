@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizArena — Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #fdf6f0; --pink: #f7c5d5; --pink-deep: #e8789a; --pink-text: #8b3a5a;
+    --yellow: #fde99d; --yellow-deep: #f5c842; --yellow-text: #7a5c00;
+    --blue: #c2dff6; --blue-deep: #6aaee8; --blue-text: #1a4f7a;
+    --card: #fffbf8; --border: rgba(0,0,0,0.07); --text: #2c1f2e; --muted: #9b8fa0;
+    --sidebar-w: 240px;
+  }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+  .blob { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; filter: blur(70px); animation: drift 14s ease-in-out infinite; }
+  .blob-1 { width: 450px; height: 450px; background: var(--yellow); opacity: 0.3; top: -150px; right: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: var(--pink); opacity: 0.28; bottom: -100px; left: 260px; animation-delay: -5s; }
+  .blob-3 { width: 260px; height: 260px; background: var(--blue); opacity: 0.25; top: 50%; right: 5%; animation-delay: -3s; }
+  @keyframes drift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(12px,-16px); } }
+
+  .sidebar { width: var(--sidebar-w); background: var(--card); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; padding: 28px 16px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; padding: 0 8px; }
+  .logo-icon { width: 38px; height: 38px; background: var(--pink-deep); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 18px; color: #fff; box-shadow: 0 3px 14px rgba(232,120,154,0.35); }
+  .logo-text { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; color: var(--pink-text); }
+  .nav-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 12px; margin-bottom: 8px; margin-top: 20px; }
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; text-decoration: none; transition: background 0.2s, color 0.2s; margin-bottom: 3px; }
+  .nav-item:hover { background: var(--pink); color: var(--pink-text); }
+  .nav-item.active { background: var(--pink); color: var(--pink-text); font-weight: 600; }
+  .nav-item .icon { font-size: 17px; width: 20px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 0 8px; }
+  .user-card { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--pink); border-radius: 14px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--pink-deep); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--pink-text); }
+  .user-role { font-size: 11px; color: var(--pink-text); opacity: 0.7; }
+  .logout-btn { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.5; transition: opacity 0.2s; }
+  .logout-btn:hover { opacity: 1; }
+
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 36px 40px; position: relative; z-index: 1; animation: fadeIn 0.6s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-header { margin-bottom: 32px; }
+  .page-title { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: -0.8px; }
+  .page-sub { font-size: 15px; color: var(--muted); margin-top: 6px; }
+
+  .tab-row { display: flex; gap: 10px; margin-bottom: 28px; }
+  .tab-btn { padding: 10px 22px; border-radius: 100px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .tab-btn:hover { border-color: var(--pink-deep); color: var(--pink-text); }
+  .tab-btn.active { background: var(--pink); border-color: var(--pink-deep); color: var(--pink-text); }
+
+  .podium-wrap { display: flex; justify-content: center; align-items: flex-end; gap: 16px; margin-bottom: 36px; }
+  .podium-item { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: podiumRise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .podium-item:nth-child(1) { animation-delay: 0.2s; }
+  .podium-item:nth-child(2) { animation-delay: 0s; }
+  .podium-item:nth-child(3) { animation-delay: 0.35s; }
+  @keyframes podiumRise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .podium-avatar { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 700; color: #fff; position: relative; }
+  .podium-avatar.rank-1 { width: 72px; height: 72px; font-size: 26px; box-shadow: 0 6px 24px rgba(245,200,66,0.4); }
+  .podium-avatar.rank-2 { width: 58px; height: 58px; font-size: 20px; }
+  .podium-avatar.rank-3 { width: 52px; height: 52px; font-size: 18px; }
+  .podium-crown { position: absolute; top: -18px; font-size: 20px; }
+  .podium-name { font-size: 13px; font-weight: 600; color: var(--text); text-align: center; max-width: 90px; }
+  .podium-pts { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .podium-block { border-radius: 14px 14px 0 0; width: 88px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: rgba(0,0,0,0.25); }
+  .podium-block.p1 { height: 90px; background: var(--yellow); }
+  .podium-block.p2 { height: 66px; background: #e0e0e0; }
+  .podium-block.p3 { height: 50px; background: #f5c4b3; }
+
+  .leader-table { background: var(--card); border: 1.5px solid var(--border); border-radius: 22px; overflow: hidden; }
+  .table-header { display: grid; grid-template-columns: 60px 1fr 120px 120px 100px; padding: 14px 20px; background: var(--pink); font-size: 12px; font-weight: 600; color: var(--pink-text); text-transform: uppercase; letter-spacing: 0.8px; }
+  .table-row { display: grid; grid-template-columns: 60px 1fr 120px 120px 100px; padding: 14px 20px; border-top: 1px solid var(--border); align-items: center; transition: background 0.2s; animation: rowSlide 0.4s ease both; }
+  .table-row:hover { background: #fdf0f4; }
+  @keyframes rowSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  .table-row.me { background: linear-gradient(90deg, rgba(247,197,213,0.3), transparent); }
+
+  .rank-badge { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .r1 { background: var(--yellow); color: var(--yellow-text); }
+  .r2 { background: #e0e0e0; color: #555; }
+  .r3 { background: #f5c4b3; color: #7a3a1a; }
+  .r-other { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); font-size: 12px; }
+
+  .row-user { display: flex; align-items: center; gap: 10px; }
+  .row-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+  .row-name { font-size: 14px; font-weight: 500; }
+  .row-you { font-size: 11px; background: var(--pink); color: var(--pink-text); padding: 2px 8px; border-radius: 100px; font-weight: 600; margin-left: 6px; }
+  .row-pts { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--pink-text); }
+  .row-avg { font-size: 14px; color: var(--muted); }
+  .row-quizzes { font-size: 14px; color: var(--text); font-weight: 500; }
+
+  .my-stats-bar { background: var(--card); border: 1.5px solid var(--pink-deep); border-radius: 18px; padding: 20px 24px; margin-bottom: 24px; display: flex; gap: 32px; align-items: center; }
+  .my-stats-bar .label { font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+  .my-stats-bar .val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--pink-text); }
+  .my-stats-bar .title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; margin-right: 16px; }
+
+  .empty { text-align: center; padding: 48px; color: var(--muted); font-size: 15px; }
+
+  @media (max-width: 900px) { .table-header, .table-row { grid-template-columns: 50px 1fr 100px 80px; } .table-header > *:nth-child(4), .table-row > *:nth-child(4) { display: none; } }
+  @media (max-width: 650px) { .sidebar { display: none; } .main { margin-left: 0; padding: 24px 16px; } .podium-wrap { gap: 8px; } }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+
+<aside class="sidebar">
+  <div class="logo"><div class="logo-icon">Q</div><span class="logo-text">QuizArena</span></div>
+  <span class="nav-label">Menu</span>
+  <a class="nav-item" href="dashboard.html"><span class="icon">🏠</span> Dashboard</a>
+  <a class="nav-item" href="quizzes.html"><span class="icon">📋</span> Browse Quizzes</a>
+  <a class="nav-item" href="attempts.html"><span class="icon">📝</span> My Attempts</a>
+  <a class="nav-item active" href="leaderboard.html"><span class="icon">🏆</span> Leaderboard</a>
+  <span class="nav-label" id="adminNavLabel" style="display:none">Admin</span>
+  <a class="nav-item" id="adminNav" href="admin.html" style="display:none"><span class="icon">⚙️</span> Manage Quizzes</a>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="sidebarAvatar">?</div>
+      <div><div class="user-name" id="sidebarName">Loading...</div><div class="user-role" id="sidebarRole">student</div></div>
+      <button class="logout-btn" onclick="logout()">🚪</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Leaderboard</div>
+    <div class="page-sub">See who's dominating the quizzes!</div>
+  </div>
+
+  <div class="my-stats-bar" id="myStatsBar" style="display:none">
+    <div class="title">Your Rank</div>
+    <div><div class="label">Global Rank</div><div class="val" id="myRank">—</div></div>
+    <div><div class="label">Total Points</div><div class="val" id="myPoints">0</div></div>
+    <div><div class="label">Avg Score</div><div class="val" id="myAvg">0%</div></div>
+    <div><div class="label">Quizzes</div><div class="val" id="myQuizzes">0</div></div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('global', this)">Global</button>
+    <button class="tab-btn" onclick="switchTab('quiz', this)">By Quiz</button>
+  </div>
+
+  <div class="podium-wrap" id="podium"></div>
+
+  <div class="leader-table" id="leaderTable">
+    <div class="table-header">
+      <div>Rank</div><div>Student</div><div>Points</div><div>Avg Score</div><div>Quizzes</div>
+    </div>
+    <div id="tableBody"><div class="empty">Loading...</div></div>
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:5000/api';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = 'auth.html';
+  function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+  function logout() { localStorage.removeItem('token'); window.location.href = 'auth.html'; }
+  function getInitials(name) { return (name||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+  const avatarColors = ['#e8789a','#6aaee8','#f5c842','#7ec87e','#b888e0'];
+  function avatarColor(name) { return avatarColors[(name||'A').charCodeAt(0) % avatarColors.length]; }
+
+  let myUserId = null;
+
+  async function loadUser() {
+    try {
+      const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+      if (!res.ok) { logout(); return; }
+      const data = await res.json();
+      // FIX: auth/me returns { success, user }
+      const user = data.user || data.data || data;
+      myUserId = user._id;
+      document.getElementById('sidebarName').textContent = user.name||'Student';
+      document.getElementById('sidebarRole').textContent = user.role||'student';
+      document.getElementById('sidebarAvatar').textContent = getInitials(user.name);
+      document.getElementById('sidebarAvatar').style.background = avatarColor(user.name);
+      if (user.role === 'admin') {
+        document.getElementById('adminNav').style.display='flex';
+        document.getElementById('adminNavLabel').style.display='block';
+      }
+    } catch(e) {}
+  }
+
+  async function loadMyStats() {
+    try {
+      const res = await fetch(`${API}/leaderboard/profile/me`, { headers: authHeaders() });
+      const data = await res.json();
+      // FIX: returns { success, profile }
+      const p = data.profile || data.data || data;
+      document.getElementById('myPoints').textContent = (p.totalPoints||0).toLocaleString();
+      document.getElementById('myAvg').textContent = (p.averageScore||0).toFixed(0) + '%';
+      document.getElementById('myQuizzes').textContent = p.quizzesAttempted||0;
+      document.getElementById('myStatsBar').style.display = 'flex';
+    } catch(e) {
+      document.getElementById('myStatsBar').style.display = 'flex';
+    }
+  }
+
+  function renderPodium(leaders) {
+    const top3 = leaders.slice(0,3);
+    if (!top3.length) { document.getElementById('podium').innerHTML = ''; return; }
+    const order = top3.length >= 2 ? [top3[1], top3[0], top3[2]].filter(Boolean) : [top3[0]];
+    const rankClasses = top3.length >= 2 ? ['rank-2','rank-1','rank-3'] : ['rank-1'];
+    const blockClasses = top3.length >= 2 ? ['p2','p1','p3'] : ['p1'];
+    const nums = top3.length >= 2 ? [2,1,3] : [1];
+
+    document.getElementById('podium').innerHTML = order.map((l, i) => {
+      const name = l?.userId?.name || l?.name || 'Unknown';
+      const pts = l?.totalPoints ?? 0;
+      return `
+        <div class="podium-item">
+          <div class="podium-avatar ${rankClasses[i]}" style="background:${avatarColor(name)}">
+            ${getInitials(name)}
+            ${nums[i]===1 ? '<span class="podium-crown">&#9733;</span>' : ''}
+          </div>
+          <div class="podium-name">${name}</div>
+          <div class="podium-pts">${pts.toLocaleString()} pts</div>
+          <div class="podium-block ${blockClasses[i]}">${nums[i]}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderTable(leaders) {
+    if (!leaders.length) {
+      document.getElementById('tableBody').innerHTML = '<div class="empty">No data yet — take some quizzes!</div>';
+      return;
+    }
+    const myRankNum = leaders.findIndex(l => {
+      const uid = l.userId?._id?.toString() || l.userId?.toString();
+      return uid === myUserId?.toString();
+    }) + 1;
+    if (myRankNum > 0) document.getElementById('myRank').textContent = '#' + myRankNum;
+
+    document.getElementById('tableBody').innerHTML = leaders.map((l, i) => {
+      const name = l.userId?.name || l.name || 'Unknown';
+      const pts = l.totalPoints ?? 0;
+      const avg = l.averageScore ?? 0;
+      const quizzes = l.quizzesAttempted ?? 0;
+      const uid = l.userId?._id?.toString() || l.userId?.toString();
+      const isMe = uid === myUserId?.toString();
+      const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'r-other';
+      return `
+        <div class="table-row ${isMe?'me':''}" style="animation-delay:${i*0.04}s">
+          <div><div class="rank-badge ${rankClass}">${i+1}</div></div>
+          <div class="row-user">
+            <div class="row-avatar" style="background:${avatarColor(name)}">${getInitials(name)}</div>
+            <span class="row-name">${name}</span>
+            ${isMe ? '<span class="row-you">You</span>' : ''}
+          </div>
+          <div class="row-pts">${pts.toLocaleString()}</div>
+          <div class="row-avg">${avg.toFixed(0)}%</div>
+          <div class="row-quizzes">${quizzes}</div>
+        </div>`;
+    }).join('');
+  }
+
+  async function loadGlobal() {
+    try {
+      const res = await fetch(`${API}/leaderboard/global/top`, { headers: authHeaders() });
+      const data = await res.json();
+      // FIX: returns { success, count, leaderboard: [] }
+      const leaders = data.leaderboard || data.data || (Array.isArray(data) ? data : []);
+      renderPodium(leaders);
+      renderTable(leaders);
+    } catch(e) {
+      document.getElementById('tableBody').innerHTML = '<div class="empty">Could not load leaderboard</div>';
+    }
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'global') loadGlobal();
+  }
+
+  loadUser();
+  loadMyStats();
+  loadGlobal();
+</script>
+</body>
+</html>

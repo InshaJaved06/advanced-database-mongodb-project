@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizArena — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6f0;
+    --pink: #f7c5d5;
+    --pink-deep: #e8789a;
+    --pink-text: #8b3a5a;
+    --yellow: #fde99d;
+    --yellow-deep: #f5c842;
+    --yellow-text: #7a5c00;
+    --blue: #c2dff6;
+    --blue-deep: #6aaee8;
+    --blue-text: #1a4f7a;
+    --card: #fffbf8;
+    --border: rgba(0,0,0,0.07);
+    --text: #2c1f2e;
+    --muted: #9b8fa0;
+    --input-bg: rgba(255,255,255,0.85);
+    --error: #e05c7a;
+    --success: #5abf9a;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .blob { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; animation: drift 12s ease-in-out infinite; }
+  .blob-1 { width: 520px; height: 520px; background: var(--pink); opacity: 0.45; top: -180px; left: -160px; animation-delay: 0s; filter: blur(60px); }
+  .blob-2 { width: 420px; height: 420px; background: var(--yellow); opacity: 0.5; bottom: -140px; right: -120px; animation-delay: -5s; filter: blur(50px); }
+  .blob-3 { width: 340px; height: 340px; background: var(--blue); opacity: 0.4; top: 40%; right: 10%; animation-delay: -2.5s; filter: blur(55px); }
+  .blob-4 { width: 200px; height: 200px; background: var(--yellow); opacity: 0.35; top: 10%; left: 30%; animation-delay: -7s; filter: blur(40px); }
+  @keyframes drift {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(12px,-18px) scale(1.04); }
+    66% { transform: translate(-8px,10px) scale(0.97); }
+  }
+
+  .shape { display: none; }
+
+  .container {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    gap: 64px; padding: 40px 24px;
+    width: 100%; max-width: 1060px;
+  }
+
+  .brand-side {
+    flex: 1; max-width: 400px;
+    display: flex; flex-direction: column; gap: 24px;
+    animation: fadeSlideLeft 0.9s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes fadeSlideLeft {
+    from { opacity: 0; transform: translateX(-36px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .logo { display: flex; align-items: center; gap: 11px; }
+  .logo-icon {
+    width: 46px; height: 46px; background: var(--pink-deep);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: #fff;
+    box-shadow: 0 4px 20px rgba(232,120,154,0.35); position: relative;
+  }
+  .logo-icon::after {
+    content: ''; position: absolute; inset: -3px;
+    border-radius: 17px; border: 2px dashed rgba(232,120,154,0.35);
+  }
+  .logo-text { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 22px; color: var(--pink-text); letter-spacing: -0.3px; }
+
+  .brand-headline { font-family: 'Playfair Display', serif; font-size: 50px; font-weight: 800; line-height: 1.08; letter-spacing: -1.5px; color: var(--text); }
+  .hl-pink { color: var(--pink-deep); }
+  .hl-yellow { background: var(--yellow-deep); color: var(--yellow-text); padding: 0 6px 2px; border-radius: 6px; display: inline-block; }
+
+  .brand-sub { font-size: 15px; color: var(--muted); line-height: 1.75; max-width: 320px; }
+
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { padding: 7px 14px; border-radius: 100px; font-size: 13px; font-weight: 600; }
+  .badge-pink { background: var(--pink); color: var(--pink-text); }
+  .badge-yellow { background: var(--yellow); color: var(--yellow-text); }
+  .badge-blue { background: var(--blue); color: var(--blue-text); }
+
+  .auth-card {
+    width: 100%; max-width: 410px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 28px; padding: 38px 36px;
+    animation: fadeSlideRight 0.9s cubic-bezier(0.16,1,0.3,1) both;
+    animation-delay: 0.1s;
+    box-shadow: 0 8px 60px rgba(247,197,213,0.25), 0 2px 12px rgba(0,0,0,0.06);
+    position: relative; overflow: hidden;
+  }
+  .auth-card::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 180px; height: 180px; background: var(--yellow); opacity: 0.2; border-radius: 50%; pointer-events: none;
+  }
+  .auth-card::after {
+    content: ''; position: absolute; bottom: -40px; left: -40px;
+    width: 120px; height: 120px; background: var(--blue); opacity: 0.18; border-radius: 50%; pointer-events: none;
+  }
+  @keyframes fadeSlideRight {
+    from { opacity: 0; transform: translateX(36px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .tabs {
+    display: flex; background: #f0e8ec; border-radius: 14px;
+    padding: 4px; margin-bottom: 28px; position: relative; z-index: 1;
+  }
+  .tab-slider {
+    position: absolute; top: 4px; bottom: 4px; width: calc(50% - 4px);
+    background: #fff; border-radius: 11px;
+    transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 2px 10px rgba(232,120,154,0.2);
+  }
+  .tab-slider.right { transform: translateX(calc(100%)); }
+  .tab {
+    flex: 1; padding: 10px; text-align: center;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 14px;
+    cursor: pointer; position: relative; z-index: 1; transition: color 0.3s;
+    color: var(--muted); border: none; background: transparent; border-radius: 11px;
+  }
+  .tab.active { color: var(--pink-text); }
+
+  .form-panel { display: none; flex-direction: column; gap: 15px; position: relative; z-index: 1; }
+  .form-panel.active { display: flex; animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; margin-bottom: 2px; }
+  .form-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+  .input-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.9px; }
+  .input-wrap { position: relative; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: var(--muted); pointer-events: none; }
+
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%; background: var(--input-bg); border: 1.5px solid #e8d8e2;
+    border-radius: 13px; padding: 12px 13px 12px 40px;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+  }
+  input::placeholder { color: #c5b4be; }
+  input:focus { border-color: var(--pink-deep); box-shadow: 0 0 0 3px rgba(232,120,154,0.15); }
+  input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(224,92,122,0.12); }
+
+  select {
+    width: 100%; background: var(--input-bg); border: 1.5px solid #e8d8e2;
+    border-radius: 13px; padding: 12px 13px 12px 40px;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; color: var(--text);
+    outline: none; cursor: pointer; -webkit-appearance: none; transition: border-color 0.2s;
+  }
+  select:focus { border-color: var(--blue-deep); box-shadow: 0 0 0 3px rgba(106,174,232,0.15); }
+  select option { background: #fff; }
+
+  .error-msg { font-size: 12px; color: var(--error); display: none; margin-top: 2px; }
+  .forgot { text-align: right; font-size: 13px; }
+  .forgot a { color: var(--blue-deep); text-decoration: none; font-weight: 500; }
+  .forgot a:hover { opacity: 0.7; }
+
+  .btn-primary {
+    width: 100%; padding: 14px;
+    background: var(--pink-deep); border: none; border-radius: 13px;
+    color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700; font-size: 15px; cursor: pointer; letter-spacing: 0.2px;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 4px 20px rgba(232,120,154,0.35); margin-top: 4px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,120,154,0.45); background: #df6d8e; }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary.loading { pointer-events: none; opacity: 0.85; }
+
+  .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  .btn-primary.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #eddde6; }
+
+  .switch-link { text-align: center; font-size: 14px; color: var(--muted); }
+  .switch-link a { color: var(--pink-deep); text-decoration: none; font-weight: 600; }
+  .switch-link a:hover { opacity: 0.75; }
+
+  /* Role hint shown when teacher is selected */
+  .role-hint { font-size: 12px; color: var(--muted); background: var(--yellow); border-radius: 8px; padding: 7px 11px; display: none; margin-top: 4px; }
+  .role-hint.show { display: block; }
+
+  .toast {
+    position: fixed; top: 24px; right: 24px; background: #fff;
+    border-radius: 16px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 500; z-index: 1000;
+    transform: translateX(130%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    max-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1.5px solid var(--border); color: var(--text);
+  }
+  .toast.show { transform: translateX(0); }
+  .toast-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-dot { background: var(--success); }
+  .toast.error-toast .toast-dot { background: var(--error); }
+
+  @media (max-width: 780px) {
+    .brand-side { display: none; }
+    .container { padding: 20px 16px; }
+    .auth-card { padding: 28px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<div class="blob blob-4"></div>
+<div class="shape shape-star">✦</div>
+<div class="shape shape-circle"></div>
+<div class="shape shape-sq"></div>
+<div class="shape shape-dot"></div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<div class="container">
+  <div class="brand-side">
+    <div class="logo">
+      <div class="logo-icon">Q</div>
+      <span class="logo-text">QuizArena</span>
+    </div>
+    <div class="brand-headline">
+      Learn.<br/>
+      <span class="hl-pink">Compete.</span><br/>
+      <span class="hl-yellow">Win.</span>
+    </div>
+    <p class="brand-sub">
+      Join thousands of students tackling quizzes, climbing leaderboards, and earning bragging rights — all in one cozy place.
+    </p>
+    <div class="badges">
+      <span class="badge badge-pink">5K+ Students</span>
+      <span class="badge badge-yellow">200+ Quizzes</span>
+      <span class="badge badge-blue">Live Leaderboards</span>
+    </div>
+  </div>
+
+  <div class="auth-card">
+    <div class="tabs">
+      <div class="tab-slider" id="tabSlider"></div>
+      <button class="tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+      <button class="tab" id="registerTab" onclick="switchTab('register')">Sign Up</button>
+    </div>
+
+    <!-- Login Panel -->
+    <div class="form-panel active" id="loginPanel">
+      <div>
+        <div class="form-title">Welcome back</div>
+        <div class="form-subtitle">So glad you're here again</div>
+      </div>
+      <div class="input-group">
+        <label>Email</label>
+        <div class="input-wrap">
+          <span class="input-icon">@</span>
+          <input type="email" id="loginEmail" placeholder="you@example.com"/>
+        </div>
+        <span class="error-msg" id="loginEmailErr">Enter a valid email</span>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">#</span>
+          <input type="password" id="loginPassword" placeholder="••••••••"/>
+        </div>
+        <span class="error-msg" id="loginPassErr">Password is required</span>
+      </div>
+      <div class="forgot"><a href="#">Forgot password?</a></div>
+      <button class="btn-primary" id="loginBtn" onclick="handleLogin()">
+        <span class="spinner"></span>
+        <span class="btn-text">Sign In</span>
+      </button>
+      <div class="divider">or</div>
+      <div class="switch-link">New here? <a href="#" onclick="switchTab('register')">Create an account</a></div>
+    </div>
+
+    <!-- Register Panel -->
+    <div class="form-panel" id="registerPanel">
+      <div>
+        <div class="form-title">Join the fun</div>
+        <div class="form-subtitle">Create your free account today</div>
+      </div>
+      <div class="input-group">
+        <label>Full Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">A</span>
+          <input type="text" id="regName" placeholder="Your name"/>
+        </div>
+        <span class="error-msg" id="regNameErr">Name is required</span>
+      </div>
+      <div class="input-group">
+        <label>Email</label>
+        <div class="input-wrap">
+          <span class="input-icon">@</span>
+          <input type="email" id="regEmail" placeholder="you@example.com"/>
+        </div>
+        <span class="error-msg" id="regEmailErr">Enter a valid email</span>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">#</span>
+          <input type="password" id="regPassword" placeholder="Min 6 characters"/>
+        </div>
+        <span class="error-msg" id="regPassErr">Must be 6+ characters</span>
+      </div>
+      <div class="input-group">
+        <label>I am a...</label>
+        <div class="input-wrap">
+          <span class="input-icon">+</span>
+          <!-- FIX: Added teacher option -->
+          <select id="regRole" onchange="onRoleChange()">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <!-- Hint shown only when teacher is selected -->
+        <div class="role-hint" id="teacherHint">
+          Teacher accounts can upload quizzes and view student attempt stats.
+        </div>
+      </div>
+      <button class="btn-primary" id="registerBtn" onclick="handleRegister()">
+        <span class="spinner"></span>
+        <span class="btn-text">Create Account</span>
+      </button>
+      <div class="divider">or</div>
+      <div class="switch-link">Already a member? <a href="#" onclick="switchTab('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api';
+
+  // ── Role-based redirect after login/register ──────────────
+  // FIX: was always going to dashboard.html for every role
+  function redirectByRole(role) {
+    if (role === 'teacher') {
+      window.location.href = 'teacher-dashboard.html';
+    } else if (role === 'admin') {
+      window.location.href = 'admin.html';
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+  }
+
+  function onRoleChange() {
+    const role = document.getElementById('regRole').value;
+    const hint = document.getElementById('teacherHint');
+    hint.classList.toggle('show', role === 'teacher');
+  }
+
+  function switchTab(tab) {
+    const slider = document.getElementById('tabSlider');
+    const lTab = document.getElementById('loginTab');
+    const rTab = document.getElementById('registerTab');
+    const lPanel = document.getElementById('loginPanel');
+    const rPanel = document.getElementById('registerPanel');
+    if (tab === 'login') {
+      slider.classList.remove('right');
+      lTab.classList.add('active'); rTab.classList.remove('active');
+      lPanel.classList.add('active'); rPanel.classList.remove('active');
+    } else {
+      slider.classList.add('right');
+      rTab.classList.add('active'); lTab.classList.remove('active');
+      rPanel.classList.add('active'); lPanel.classList.remove('active');
+    }
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.className = 'toast ' + (type === 'success' ? 'success' : 'error-toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function setLoading(id, on) {
+    document.getElementById(id).classList[on ? 'add' : 'remove']('loading');
+  }
+
+  function validate(inputId, errId, check) {
+    const el = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (!check) { el.classList.add('error'); err.style.display = 'block'; return false; }
+    el.classList.remove('error'); err.style.display = 'none'; return true;
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const v1 = validate('loginEmail', 'loginEmailErr', email && email.includes('@'));
+    const v2 = validate('loginPassword', 'loginPassErr', password.length > 0);
+    if (!v1 || !v2) return;
+    setLoading('loginBtn', true);
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        const role = data.user?.role || 'student';
+        showToast('Welcome back! Taking you in...', 'success');
+        // FIX: redirect based on role
+        setTimeout(() => redirectByRole(role), 1600);
+      } else {
+        showToast(data.message || 'Invalid credentials', 'error');
+      }
+    } catch { showToast('Cannot reach server', 'error'); }
+    setLoading('loginBtn', false);
+  }
+
+  async function handleRegister() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const role = document.getElementById('regRole').value;
+    const v1 = validate('regName', 'regNameErr', name.length > 0);
+    const v2 = validate('regEmail', 'regEmailErr', email && email.includes('@'));
+    const v3 = validate('regPassword', 'regPassErr', password.length >= 6);
+    if (!v1 || !v2 || !v3) return;
+    setLoading('registerBtn', true);
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        const userRole = data.user?.role || role;
+        showToast('Account created! Welcome!', 'success');
+        // FIX: redirect based on role
+        setTimeout(() => redirectByRole(userRole), 1800);
+      } else {
+        showToast(data.message || 'Registration failed', 'error');
+      }
+    } catch { showToast('Cannot reach server', 'error'); }
+    setLoading('registerBtn', false);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.form-panel.active');
+    if (active.id === 'loginPanel') handleLogin();
+    else handleRegister();
+  });
+</script>
+</body>
+</html>
